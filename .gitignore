@@ -1,0 +1,42 @@
+# Python cache and bytecode
+.env
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+ENV/
+.venv/
+.ENV/
+
+# PyInstaller and cx_Freeze build folders
+build/
+dist/
+*.spec
+
+# Log files
+*.log
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Python package dependencies
+*.egg-info/
+*.egg
+
+# IDE-specific files (optional)
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+
+# Ignore executable files (optional)
+*.exe
+*.dll
+*.so
+*.dylib
+*.app
+*.apk
