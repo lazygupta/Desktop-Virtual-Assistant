@@ -16,6 +16,7 @@ from datetime import datetime
 from googletrans import Translator
 from gtts import gTTS
 import pyttsx3
+import subprocess
 
 programs = {
     'notepad': "notepad.exe",
@@ -89,27 +90,47 @@ def camera_vision():
 
 # New Features
 
-def search_files(filename, directory):
-    # Ask user for directory if not provided
-    # if not directory:
-    #     speak("In which directory would you like to search?")
-    #     directory = listen().strip()
-    
-    if not os.path.isdir(directory):
-        speak("The directory you specified does not exist. Please try again.")
-        return
+import os
 
-    result = []
-    for root, dirs, files in os.walk(directory):
-        if filename in files:
-            result.append(os.path.join(root, filename))
+def open_pdf(file_path):
+    # Check the platform and open the file with the default application
+    try:
+        if platform.system() == "Windows":
+            subprocess.Popen([file_path], shell=True)  # Opens file with the default application
+        elif platform.system() == "Darwin":  # macOS
+            subprocess.Popen(["open", file_path])
+        else:  # For Linux
+            subprocess.Popen(["xdg-open", file_path])
+        print(f"Opening: {file_path}")
+    except Exception as e:
+        print(f"Failed to open file: {e}")
+
+def search_files(filename, directory):
+    print(f"Searching for: {filename}")
+    print(f"Directory: {directory}")
     
+    result = []
+    filename_lower = filename.lower()
+    
+    # Walk through the directory and subdirectories
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            # Perform case-insensitive comparison
+            if filename_lower in file.lower():
+                result.append(os.path.join(root, file))
+
+    print("Search results:", result)
+    
+    # Provide feedback to the user
     if result:
-        speak(f"Found {len(result)} results.")
+        speak(f"Found {len(result)} result(s).")
         for file in result:
             print(file)
+            # Open the first matching PDF file
+            open_pdf(file)
     else:
         speak("No files found with that name.")
+
 
 def set_volume(level):
     try:
@@ -165,7 +186,7 @@ def toggle_wifi(state):
 
 def get_news():
     api_key = config("NEWS_API_KEY")
-    url = f"https://newsapi.org/v2/top-headlines?country=us&apiKey={api_key}"
+    url = f"https://newsapi.org/v2/top-headlines?country=in&apiKey={api_key}"
     response = requests.get(url).json()
     if response["status"] == "ok":
         articles = response["articles"][:5]
@@ -266,3 +287,24 @@ def read_text_file(file_path, language='en'):
     except Exception as e:
         print(f"Error reading or processing file: {e}")
         speak("Sorry, there was an error reading the file.")
+
+def open_directory(folder_name):
+    BASE_DIRECTORY = config("BASE_DIRECTORY") 
+    # List to store matching folder paths
+    found_folders = []
+
+    # Search through the base directory for the folder
+    for root, dirs, files in os.walk(BASE_DIRECTORY):
+        for directory in dirs:
+            if folder_name.lower() == directory.lower():  # Case-insensitive match
+                found_folders.append(os.path.join(root, directory))
+
+    # Check if any matching folders were found
+    if found_folders:
+        # Open the first matching folder (or prompt user if there are multiple matches)
+        folder_to_open = found_folders[0]  # Choose the first match
+        speak(f"Opening the folder {folder_name}.")
+        print(f"Opening folder: {folder_to_open}")
+        subprocess.Popen(f'explorer "{folder_to_open}"')  # Opens the folder in File Explorer on Windows
+    else:
+        speak(f"Sorry, I couldn't find a folder named {folder_name}.")

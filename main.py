@@ -6,12 +6,27 @@ from act.actions import (
     take_screenshot, start_screen_record, stop_screen_record, open_camera, 
     camera_vision, open_website, search_files, set_volume, get_system_info, 
     read_clipboard, copy_to_clipboard, check_battery, toggle_wifi, get_news, 
-    get_weather, set_reminder, get_age, convert_currency, translate_text_file, read_text_file
+    get_weather, set_reminder, get_age, convert_currency, translate_text_file, read_text_file, open_directory
 )
 import threading
 import ui.gui as gui 
 import time
 import os
+        
+from langchain_google_genai import ChatGoogleGenerativeAI
+from decouple import config 
+import string
+
+api_key =  config("GOOGLE_GEMINI_API_KEY")
+
+
+base_prompt = (
+    "I will give you a prompt for a directory return it with specific directory format such as C:\\Users\\username\\Documents\n"
+    "eg If prompt is 'C drive Users username' then response should be exactly as formatted with escaped backslashes 'C:\\Users\\username' (No additional text)"
+    "Ensure that the directory path is correctly formatted with escaped backslashes (\\) in Python strings. For example: directory = C:\\Users\\Gupta\\\Downloads"
+)
+
+llm = ChatGoogleGenerativeAI(model="gemini-pro",google_api_key=api_key)
 
 BOT_NAME = config("VA_NAME")
 
@@ -116,15 +131,29 @@ if __name__ == '__main__':
             camera_vision()
 
         elif intent == "ACTION_SEARCH_FILES":
+
             speak("What file are you looking for?")
-            filename = listen().lower()  # Captures the filename from the user's response
-            print(filename)
+            filename = listen().strip().lower()  # Captures the filename from the user's response
+            prompt1 = "Format it with specific filename (no additional text) and be prepared because prompt can be like 'resume hyphen cv dot pdf' then the result should be 'resume-cv.pdf' OR prompt can be like 'resume space divya underscore cv dot pdf' then the result should be 'resume divya_cv.pdf'" + "prompt is: ' The format can be in pdf jpeg png and various and if no format is specified give the filename as it is" + filename + "'"
+            result1 = llm.invoke(prompt1)
+            response1 = result1.content
+            print(response1)
+            filename= response1
+            
+            speak("Please provide the full directory path where you want to search, like C:\\Users\\username\\Documents")
+            directory = listen().strip()
+            prompt = base_prompt + "prompt is: '" + directory + "'"
+            result = llm.invoke(prompt)
+            response = result.content
+            print(response)
+            directory=response
 
-            speak("In which directory would you like to search?")
-            directory = listen().strip()  # Captures the directory from the user's response
-            print(directory)
+            # Check if the user provided input
+            if not directory:
+                speak("No directory was provided. Please try again.")
+            else:
+                search_files(filename, directory)
 
-            search_files(filename, directory)  # Pass both filename and directory to search_files function
 
 
         elif intent == "ACTION_SET_VOLUME":
@@ -210,7 +239,7 @@ if __name__ == '__main__':
         elif intent == "ACTION_TRANSLATE_TEXT_FILE":
             media_dir = config("MEDIA_DIR2")
             text_file = config("PROMPT_FILE")
-            file_path = os.path.join(media_dir, text_file)
+            file_path = os.path.join(media_dir, text_file) 
             
             def get_language():
                 speak("Which language would you like to translate to?")
@@ -233,7 +262,7 @@ if __name__ == '__main__':
                 "malayalam": "ml",
             }
             
-            lang_text = get_language()
+            lang_text = get_language() #german
 
             target_language_code = language_codes.get(lang_text)
     
@@ -287,3 +316,13 @@ if __name__ == '__main__':
                 read_text_file(file_path, target_language_code)  
             else:
                 speak("Sorry, I couldn't recognize that language.")     
+
+        elif intent == "ACTION_FEATURES":
+            speak("I can assist with various tasks, including opening applications like Notepad, Word, Excel, PowerPoint, and the browser, and handling system actions like adjusting volume, toggling Wi-Fi, checking battery status, and retrieving system info. I can take screenshots, record your screen, search files, and manage clipboard content. I also provide reminders, age calculations, currency conversions, and weather and news updates. Additionally, I can open and analyze camera views, read and translate text files into multiple languages, and offer custom commands to hibernate, wake, or control my visibility on your screen. Just let me know what you need, and I'm here to help!")
+
+
+        elif intent == "ACTION_OPEN_DIRECTORY":
+            speak("Which directory would you like to open?")
+            directory_name = listen().strip()  # Capture the directory name from the user's response
+            print(directory_name)
+            open_directory(directory_name)      

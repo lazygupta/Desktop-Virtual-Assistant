@@ -13,7 +13,7 @@ def speak(text):
     words = text.split()  # Split text into words
     if len(words) > 20:
         # Shorten the text to the first 20 words and add an indicator
-        short_text = ' '.join(words[:20]) + " ... and many more You can look in the prompt text file for complete answers"
+        short_text = ' '.join(words[:30]) + " ... and many more You can look in the prompt text file for complete answers"
     else:
         short_text = text
 

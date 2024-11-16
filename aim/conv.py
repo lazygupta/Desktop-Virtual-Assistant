@@ -41,6 +41,9 @@ base_prompt = (
     "- ACTION_CONVERT_CURRENCY: Convert a currency or Currency Converter\n"
     "- ACTION_TRANSLATE_TEXT_FILE: Translate language or Translate the file\n"
     "- ACTION_READ_TEXT_FILE: Read the text file or Read the file\n"
+    "- ACTION_GET_NEWS: News or current news affairs\n"
+    "- ACTION_FEATURES: What can you do or What features you have or What actions can you perform\n"
+    "- ACTION_OPEN_DIRECTORY: Open any directory or Folder\n"
 )
 
 def remove_punctuation(text):
@@ -57,12 +60,12 @@ def converse(query):
         print(f"Executing action: {response}")
         return response
     else:
-        prompt = query
+        prompt = "Describe" + query
         result = llm.invoke(prompt)
         response = result.content
         cleaned_response = remove_punctuation(response)
         print("Conversational response:", cleaned_response)
-        return cleaned_response
+        return cleaned_response #gemini
 
 
 if __name__ == '__main__':
